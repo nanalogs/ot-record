@@ -2480,7 +2480,7 @@
             (item, index) => ({
 
               id:
-                "sheet-" + index,
+                String(item.id || ("sheet-" + index)),
 
               date:
                 normalizeDate(
@@ -3111,6 +3111,9 @@
 
 
       const data = {
+
+        action:
+          editId ? "update" : "add",
 
         id:
           editId ||
