@@ -1955,19 +1955,9 @@
             </label>
 
             <select id="type">
-
-              <option value="OT">
-                OT
-              </option>
-
-              <option value="WFH">
-                WFH
-              </option>
-
-              <option value="อื่น ๆ">
-                อื่น ๆ
-              </option>
-
+              <option value="OT 1">OT 1</option>
+              <option value="OT 1.5">OT 1.5</option>
+              <option value="OT 2">OT 2</option>
             </select>
 
           </div>
@@ -2458,98 +2448,45 @@
      LOAD FROM GOOGLE SHEETS
      ===================================================== */
 
-  async function loadRecordsFromGoogleSheets() {
-
-    try {
-
-      const response =
-        await fetch(
-          GOOGLE_SHEETS_API
-        );
-
-      const result =
-        await response.json();
-
-      if (
-        result.success &&
-        Array.isArray(result.records)
-      ) {
-
-        records =
-          result.records.map(
-            (item, index) => ({
-
-              id:
-                String(item.id || ("sheet-" + index)),
-
-              date:
-                normalizeDate(
-                  item.date
-                ),
-
-              type:
-                item.type || "OT",
-
-              start:
-                item.start || "",
-
-              end:
-                item.end || "",
-
-              hours:
-                Number(item.hours) || 0,
-
-              note:
-                item.note || ""
-
-            })
-          );
-
-        saveRecords();
-
-        render();
-
-        renderHistoryPeriods();
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "โหลดข้อมูลจาก Google Sheets ไม่สำเร็จ:",
-        error
-      );
-
-      const localData =
-        localStorage.getItem(
-          "nanasOT"
-        );
-
-      if (localData) {
-
-        try {
-
-          records =
-            JSON.parse(
-              localData
-            );
-
-          render();
-
-          renderHistoryPeriods();
-
-        } catch (e) {
-
-          console.error(e);
-
-        }
-
-      }
-
-    }
-
+  let busy = false;
+  const syncStatus = document.getElementById("syncStatus");
+  function setSync(text) { if (syncStatus) syncStatus.textContent = text; }
+  function setBusy(value) {
+    busy = value;
+    saveBtn.disabled = value;
+    document.querySelectorAll('button').forEach(b => {
+      if (b !== saveBtn) b.disabled = value;
+    });
   }
-
+  async function fetchServerRecords() {
+    const response = await fetch(GOOGLE_SHEETS_API + '?_=' + Date.now(), {cache:'no-store'});
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const result = await response.json();
+    if (!result.success || !Array.isArray(result.records)) throw new Error(result.error || 'โหลดข้อมูลไม่สำเร็จ');
+    return result.records.map((item,index) => ({
+      id:String(item.id || ('sheet-' + index)),
+      date:normalizeDate(item.date), type:item.type || 'OT',
+      start:item.start || '',end:item.end || '',
+      hours:Number(item.hours) || 0,note:item.note || ''
+    }));
+  }
+  async function loadRecordsFromGoogleSheets() {
+    try {
+      records = await fetchServerRecords();
+      saveRecords(); render(); renderHistoryPeriods();
+      setSync('☁️ ซิงก์ข้อมูลจาก Google Sheets แล้ว');
+      return true;
+    } catch (error) {
+      console.error(error);
+      setSync('⚠️ เชื่อมต่อ Google Sheets ไม่ได้ • ข้อมูลในเครื่องอาจไม่ใช่ข้อมูลล่าสุด');
+      try {
+        const local = JSON.parse(localStorage.getItem('nanasOT') || '[]');
+        if (Array.isArray(local)) records = local;
+        render(); renderHistoryPeriods();
+      } catch (e) { console.error(e); }
+      return false;
+    }
+  }
 
   /* =====================================================
      NORMALIZE DATE
@@ -3014,206 +2951,65 @@
      SEND TO GOOGLE SHEETS
      ===================================================== */
 
-  async function sendToGoogleSheets(
-    data
-  ) {
-
-    try {
-
-      const payload =
-        new URLSearchParams();
-
-      payload.append(
-        "payload",
-        JSON.stringify(
-          data
-        )
-      );
-
-      await fetch(
-        GOOGLE_SHEETS_API,
-        {
-          method: "POST",
-
-          mode: "no-cors",
-
-          headers: {
-            "Content-Type":
-              "application/x-www-form-urlencoded;charset=UTF-8"
-          },
-
-          body:
-            payload.toString()
-        }
-      );
-
-      return true;
-
-    } catch (error) {
-
-      console.error(
-        "ส่งข้อมูลไป Google Sheets ไม่สำเร็จ:",
-        error
-      );
-
-      return false;
-
-    }
-
+  // Google Apps Script cross-origin POST uses no-cors. The response is opaque,
+  // so verify each operation by reading the server state back over GET.
+  async function sendToGoogleSheets(data) {
+    const payload = new URLSearchParams();
+    payload.append('payload', JSON.stringify(data));
+    await fetch(GOOGLE_SHEETS_API, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body:payload.toString()
+    });
   }
-
-
-  /* =====================================================
-     FORM SUBMIT
-     ===================================================== */
-
-  form.addEventListener(
-    "submit",
-    function(e) {
-
-      e.preventDefault();
-
-      if (
-        !dateInput.value ||
-        !startInput.value ||
-        !endInput.value
-      ) {
-
-        alert(
-          "กรุณากรอกวันที่และเวลาให้ครบค่ะ"
-        );
-
-        return;
-
-      }
-
-
-      const hours =
-        calculateHours(
-          startInput.value,
-          endInput.value
-        );
-
-
-      if (hours <= 0) {
-
-        alert(
-          "เวลาสิ้นสุดต้องไม่เท่ากับเวลาเริ่มค่ะ"
-        );
-
-        return;
-
-      }
-
-
-      const editId =
-        editIdInput.value;
-
-
-      const data = {
-
-        action:
-          editId ? "update" : "add",
-
-        id:
-          editId ||
-          Date.now().toString(),
-
-        date:
-          dateInput.value,
-
-        type:
-          typeInput.value,
-
-        start:
-          startInput.value,
-
-        end:
-          endInput.value,
-
-        hours:
-          hours,
-
-        note:
-          noteInput.value.trim()
-
-      };
-
-
-      if (editId) {
-
-        records =
-          records.map(
-            item =>
-              item.id === editId
-                ? data
-                : item
-          );
-
-      } else {
-
-        records.push(
-          data
-        );
-
-      }
-
-
-      saveRecords();
-
-      render();
-
-      renderHistoryPeriods();
-
-
-      const syncStatus =
-        document.getElementById(
-          "syncStatus"
-        );
-
-
-      if (syncStatus) {
-
-        syncStatus.textContent =
-          "☁️ กำลังส่งข้อมูลไป Google Sheets...";
-
-      }
-
-
-      resetForm();
-
-
-      sendToGoogleSheets(
-        data
-      )
-        .then(
-          ok => {
-
-            if (syncStatus) {
-
-              syncStatus.textContent =
-                ok
-                  ? "☁️ ส่งข้อมูลไป Google Sheets แล้ว • ข้อมูลสำรองอยู่ในเครื่องนี้"
-                  : "⚠️ บันทึกในเครื่องแล้ว แต่ส่ง Google Sheets ไม่สำเร็จ";
-
-            }
-
-
-            if (ok) {
-
-              setTimeout(
-                loadRecordsFromGoogleSheets,
-                800
-              );
-
-            }
-
-          }
-        );
-
+  const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
+  async function verifyChange(data) {
+    let latest, lastError;
+    for (let attempt=0; attempt<6; attempt++) {
+      if (attempt) await sleep(700 * attempt);
+      try {
+        latest = await fetchServerRecords();
+        const match = latest.find(r => r.id === data.id);
+        const ok = data.action === 'delete' ? !match :
+          !!match && match.date === data.date && match.start === data.start &&
+          match.end === data.end && match.type === data.type &&
+          match.note === data.note && Math.abs(match.hours-data.hours) < 0.001;
+        if (ok) return latest;
+      } catch (e) { lastError = e; }
     }
-  );
-
+    throw new Error(lastError ? String(lastError) : 'ยังยืนยันการเปลี่ยนแปลงใน Google Sheets ไม่ได้');
+  }
+  function useServerRecords(latest) {
+    records = latest; saveRecords(); render(); renderHistoryPeriods();
+  }
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (busy) return;
+    if (!dateInput.value || !startInput.value || !endInput.value) {
+      alert('กรุณากรอกวันที่และเวลาให้ครบค่ะ'); return;
+    }
+    const hours = calculateHours(startInput.value,endInput.value);
+    if (hours <= 0) { alert('เวลาสิ้นสุดต้องไม่เท่ากับเวลาเริ่มค่ะ'); return; }
+    const editId = editIdInput.value;
+    const data = {
+      action:editId ? 'update' : 'add',
+      id:editId || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+'-'+Math.random().toString(36).slice(2)),
+      date:dateInput.value,type:typeInput.value,
+      start:startInput.value,end:endInput.value,hours,note:noteInput.value.trim()
+    };
+    setBusy(true); setSync('☁️ กำลังบันทึกและตรวจสอบ Google Sheets...');
+    try {
+      await sendToGoogleSheets(data);
+      const latest = await verifyChange(data);
+      useServerRecords(latest);
+      resetForm();
+      setSync('✅ บันทึกและตรวจสอบใน Google Sheets สำเร็จ');
+    } catch (error) {
+      console.error(error);
+      setSync('⚠️ ยังยืนยันการบันทึกไม่ได้ • โปรดรีเฟรชเพื่อตรวจสอบก่อนกดบันทึกซ้ำ');
+      alert('ยังยืนยันการบันทึกใน Google Sheets ไม่ได้ กรุณารีเฟรชเพื่อตรวจสอบก่อนลองอีกครั้ง');
+    } finally { setBusy(false); }
+  });
 
   /* =====================================================
      EDIT RECORD
@@ -3241,7 +3037,7 @@
       item.date;
 
     typeInput.value =
-      item.type;
+      ["OT 1", "OT 1.5", "OT 2"].includes(item.type) ? item.type : "OT 1";
 
     startInput.value =
       item.start;
@@ -3274,74 +3070,24 @@
      DELETE RECORD
      ===================================================== */
 
-  function deleteRecord(
-    id
-  ) {
-
-    if (
-      !confirm(
-        "ต้องการลบรายการนี้ใช่ไหมคะ?"
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    records =
-      records.filter(
-        r =>
-          r.id !== id
-      );
-
-    saveRecords();
-
-    render();
-
-    renderHistoryPeriods();
-
+  async function deleteRecord(id) {
+    if (busy || !confirm('ต้องการลบรายการนี้จาก Google Sheets ถาวรใช่ไหมคะ?')) return;
+    setBusy(true); setSync('☁️ กำลังลบและตรวจสอบ Google Sheets...');
+    try {
+      await sendToGoogleSheets({action:'delete',id});
+      const latest = await verifyChange({action:'delete',id});
+      useServerRecords(latest);
+      setSync('✅ ลบรายการจาก Google Sheets สำเร็จ');
+    } catch (error) {
+      console.error(error);
+      setSync('⚠️ ยังยืนยันการลบไม่ได้ • โปรดรีเฟรชตรวจสอบ');
+      alert('ยังยืนยันการลบใน Google Sheets ไม่ได้ กรุณารีเฟรชตรวจสอบรายการ');
+    } finally { setBusy(false); }
   }
-
-
-  /* =====================================================
-     CLEAR ALL
-     ===================================================== */
 
   function clearAll() {
-
-    if (!records.length) {
-
-      alert(
-        "ยังไม่มีข้อมูลให้ล้างค่ะ"
-      );
-
-      return;
-
-    }
-
-
-    if (
-      !confirm(
-        "ต้องการลบข้อมูล OT ทั้งหมดหรือไม่?"
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    records = [];
-
-    saveRecords();
-
-    render();
-
-    renderHistoryPeriods();
-
+    alert('เพื่อป้องกันข้อมูลสูญหาย ปุ่มล้างทั้งหมดถูกปิดไว้ชั่วคราวค่ะ กรุณาลบทีละรายการ');
   }
-
 
   /* =====================================================
      RESET FORM
@@ -3358,7 +3104,7 @@
         .split("T")[0];
 
     typeInput.value =
-      "OT";
+      "OT 1";
 
     startInput.value =
       "";
