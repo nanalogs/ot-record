@@ -8,6 +8,9 @@
   />
   <title>Nana's OT</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     /* =====================================================
        NANA'S OT
@@ -1625,7 +1628,7 @@
        ไม่เปลี่ยนพื้นหลัง / กล่อง / ความโปร่งใส / layout / banner
        ========================================================= */
 
-    @import url("https://fonts.googleapis.com/css2?family=Mitr:wght@300;400&display=swap");
+    /* Mitr font loaded in <head> for reliable rendering */
 
     body {
       font-family:
@@ -1889,6 +1892,81 @@
 
       text-shadow:
         0 1px 1px rgba(0,0,0,0.18);
+    }
+
+    /* =========================================================
+       SOFT MINIMAL — TYPOGRAPHY ONLY (2026-10-08)
+       Preserve glass cards, background, banner, icons and layout.
+       ========================================================= */
+    body, button, input, textarea, select, table {
+      font-family: "Mitr", "Noto Sans Thai", "Leelawadee UI", sans-serif;
+      font-weight: 400;
+      font-synthesis: none;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    body, .card h2, .section-title-text, label, .history-select-label,
+    input, textarea, select, #historyPeriodSelect,
+    input::placeholder, textarea::placeholder,
+    button, .btn-secondary, .btn-danger, .btn-primary,
+    .summary-box .number, .summary-box .label,
+    .history-summary-box .number, .history-summary-box .label,
+    .period, .period strong, .history-period-text,
+    th, td, tbody td::before, td.hours, tbody td:nth-child(5),
+    #syncStatus, .empty, .history-empty, .footer {
+      -webkit-text-stroke: 0 !important;
+      text-shadow: none !important;
+    }
+    .card h2, .section-title-text {
+      color: #252525;
+      font-size: 19px;
+      font-weight: 500;
+      line-height: 1.5;
+      letter-spacing: 0;
+    }
+    label, .history-select-label {
+      color: #353535;
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.55;
+    }
+    input, textarea, select, #historyPeriodSelect {
+      color: #252525;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+    input::placeholder, textarea::placeholder { color: #626262; opacity: 1; }
+    button { font-size: 14px; font-weight: 500; }
+    .btn-primary { color: #fff; }
+    .btn-secondary, .btn-danger { color: #303030; }
+    .summary-box .number { color: #222; font-size: 27px; font-weight: 500; }
+    .history-summary-box .number { color: #222; font-size: 21px; font-weight: 500; }
+    .summary-box .label, .history-summary-box .label {
+      color: #4e4e4e;
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+    .period strong, .history-period-text { color: #333; font-size: 12px; font-weight: 400; }
+    th, td, tbody td::before { color: #303030; font-size: 13px; font-weight: 400; line-height: 1.55; }
+    th, tbody td::before { font-weight: 500; }
+    td.hours, tbody td:nth-child(5) { color: #252525; font-weight: 500; }
+    #syncStatus, .footer, .empty, .history-empty { color: #4b4b4b; font-weight: 400; line-height: 1.6; }
+    #syncStatus { font-size: 12px; }
+    #historyPeriodSelect option { color: #303030; }
+    @media (max-width: 650px) {
+      tbody td { font-size: 13px; line-height: 1.6; }
+      tbody td::before { font-size: 12px; }
+      .summary-box .number { font-size: 24px; }
+      .history-summary-box .number { font-size: 19px; }
+      .summary-box .label, .history-summary-box .label { font-size: 10.5px; }
+    }
+    @media (max-width: 390px) {
+      .card h2, .section-title-text { font-size: 17px; }
+      .summary-box .number { font-size: 22px; }
+      .history-summary-box .number { font-size: 18px; }
+      .records-header .btn-danger { font-size: 11px; }
     }
   </style>
 </head>
