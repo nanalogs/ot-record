@@ -1968,6 +1968,35 @@
       .history-summary-box .number { font-size: 18px; }
       .records-header .btn-danger { font-size: 11px; }
     }
+
+    /* MOBILE: one continuous table, with comfortable horizontal swipe.
+       No modifications to the background, banner, glass cards, or JS. */
+    .ot-list-scroll { background: rgba(255,255,255,.48); border: 1px solid rgba(255,255,255,.50); }
+    .ot-list-table th, .ot-list-table td { color: #252525 !important; text-shadow: none !important; -webkit-text-stroke: 0 !important; }
+    .ot-list-table tbody tr:nth-child(even) { background: rgba(255,255,255,.24); }
+    .ot-list-table tbody tr:nth-child(odd) { background: rgba(255,255,255,.10); }
+    .ot-list-table td.hours { color: #1d1d1d !important; }
+    @media (max-width: 650px) {
+      .ot-list-scroll { overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch; border-radius: 17px; }
+      .ot-list-table { display: table !important; width: 680px !important; min-width: 680px !important; table-layout: fixed; border-collapse: separate; border-spacing: 0; }
+      .ot-list-table thead { display: table-header-group !important; }
+      .ot-list-table tbody { display: table-row-group !important; }
+      .ot-list-table tr, .ot-list-table tbody tr { display: table-row !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; margin: 0 !important; box-shadow: none !important; background-clip: padding-box; }
+      .ot-list-table th, .ot-list-table td, .ot-list-table tbody td { display: table-cell !important; width: auto !important; padding: 10px 6px !important; border: 0 !important; border-bottom: 1px solid rgba(60,60,60,.14) !important; vertical-align: middle !important; font-size: 11.5px !important; line-height: 1.45 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ot-list-table th { font-size: 11px !important; font-weight: 500 !important; background: rgba(255,255,255,.62) !important; }
+      .ot-list-table tbody td::before { content: none !important; display: none !important; }
+      .ot-list-table th:nth-child(1), .ot-list-table td:nth-child(1) { width: 94px !important; position: sticky; left: 0; z-index: 2; background: rgba(246,246,246,.96) !important; }
+      .ot-list-table th:nth-child(1) { z-index: 3; }
+      .ot-list-table th:nth-child(2), .ot-list-table td:nth-child(2) { width: 64px !important; }
+      .ot-list-table th:nth-child(3), .ot-list-table td:nth-child(3), .ot-list-table th:nth-child(4), .ot-list-table td:nth-child(4) { width: 54px !important; }
+      .ot-list-table th:nth-child(5), .ot-list-table td:nth-child(5) { width: 63px !important; }
+      .ot-list-table th:nth-child(6), .ot-list-table td:nth-child(6) { width: 143px !important; }
+      .ot-list-table th:nth-child(7), .ot-list-table td:nth-child(7) { width: 208px !important; overflow: visible; }
+      .ot-list-table td:nth-child(7) { display: table-cell !important; padding-top: 10px !important; margin-top: 0 !important; }
+      .ot-list-table td:nth-child(7) button { display: inline-block; width: auto; min-height: 32px; padding: 5px 7px; margin: 1px; font-size: 11px; vertical-align: middle; }
+      .ot-list-table td:nth-child(6) { white-space: normal; overflow-wrap: anywhere; }
+      .ot-list-table .empty { text-align: center !important; }
+    }
   </style>
 </head>
 
@@ -2212,9 +2241,9 @@
 
       </div>
 
-      <div class="table-wrapper">
+      <div class="table-wrapper ot-list-scroll" role="region" aria-label="ตารางรายการ OT เลื่อนซ้ายขวาเพื่อดูข้อมูลเพิ่มเติม" tabindex="0">
 
-        <table>
+        <table class="ot-list-table">
 
           <thead>
 
